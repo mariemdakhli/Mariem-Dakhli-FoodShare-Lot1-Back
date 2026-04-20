@@ -168,6 +168,9 @@ public class MissionService implements IMissionService {
         return missionRepository.findByStatus(status);
     }
 
+
+
+
     // ==================== COMPLETE MISSION (FULL WORKFLOW) ====================
 
     public Mission completeMission(Long missionId) {
@@ -274,12 +277,15 @@ public class MissionService implements IMissionService {
         userRepository.save(user);
     }
 
+
+
+
     // ==================== MATCH SCORE ====================
 
     public double calculateMatch(User user, Mission mission) {
 
         if (mission.getRequiredSkills() == null || mission.getRequiredSkills().isEmpty()) {
-            return 1.0; // Everyone is a match if no skills are required
+            return 1.0; // 100% Everyone is a match if no skills are required
         }
 
         long matched = user.getSkills().stream()
@@ -289,7 +295,11 @@ public class MissionService implements IMissionService {
         return (double) matched / mission.getRequiredSkills().size();
     }
 
-    // ==================== STATUS ====================
+
+
+
+
+    // ==================== il ont ecrit maj ou mini pas de changement  converir text en enum  ====================
 
     private MissionStatus parseStatus(String status) {
         if (status == null || status.trim().isEmpty()) {
@@ -303,6 +313,8 @@ public class MissionService implements IMissionService {
         }
     }
 
+
+//nstaamlo feha id lokhra user keml
     public double calculateMatch(Mission mission, Long userId) {
 
         User user = userRepository.findById(userId)

@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 @Service
 @RequiredArgsConstructor
-public class AssignmentService {
+public class AssignmentService implements IAssignmentService {
     private final AssignmentRepository assignmentRepository;
     private final UserRepository userRepository;
     private final MissionRepository missionRepository;
@@ -124,7 +124,7 @@ public class AssignmentService {
         Assignment assignment = assignmentRepository.findById(assignmentId)
                 .orElseThrow(() -> new RuntimeException("Assignment not found"));
 
-        // ✅ récupérer mission et user
+        // 
         Mission mission = assignment.getMission();
         User volunteer = assignment.getUser();
 
@@ -133,38 +133,18 @@ public class AssignmentService {
         Assignment saved = assignmentRepository.save(assignment);
 
         // =========================
-        // POINTS FOR VOLUNTEER COMPLETION ⭐
+        // POINTS FOR VOLUNTEER COMPLETION 
         // =========================
         if (volunteer.getPoints() == null) {
             volunteer.setPoints(0);
         }
 
-        int completionPoints = mission.getDuration() * 5; // 5 points per hour for completion
+        int completionPoints = mission.getDuration() * 2; // 2 points per hour for completion (pending)
         volunteer.setPoints(volunteer.getPoints() + completionPoints);
 
-        // =========================
-        // UPDATE TOTAL HOURS
-        // =========================
-        if (volunteer.getTotalHours() == null) {
-            volunteer.setTotalHours(0);
-        }
+        // Badge update based on current hours
+        updateBadge(volunteer);
 
-        volunteer.setTotalHours(
-                volunteer.getTotalHours() + mission.getDuration()
-        );
-
-        // =========================
-        // UPDATE BADGE
-        // =========================
-        int hours = volunteer.getTotalHours();
-
-        if (hours >= 30) {
-            volunteer.setBadge(Badge.GOLD);
-        } else if (hours >= 10) {
-            volunteer.setBadge(Badge.SILVER);
-        } else {
-            volunteer.setBadge(Badge.BRONZE);
-        }
 
         // =========================
         // SAVE USER WITH POINTS
@@ -209,38 +189,22 @@ public class AssignmentService {
         missionRepository.save(mission);
 
         // =========================
-        // 2. HOURS
+        // 2. HOURS (ONLY ADDED AT VERIFICATION)
         // =========================
-        if (volunteer.getTotalHours() == null) {
-            volunteer.setTotalHours(0);
-        }
-
-        volunteer.setTotalHours(
-                volunteer.getTotalHours() + mission.getDuration()
-        );
+        if (volunteer.getTotalHours() == null) volunteer.setTotalHours(0);
+        volunteer.setTotalHours(volunteer.getTotalHours() + mission.getDuration());
 
         // =========================
-        // 3. POINTS ⭐ (FIXED)
+        // 3. FINAL POINTS ⭐
         // =========================
-        if (volunteer.getPoints() == null) {
-            volunteer.setPoints(0);
-        }
-
-        int newPoints = mission.getDuration() * 10;
-        volunteer.setPoints(volunteer.getPoints() + newPoints);
+        if (volunteer.getPoints() == null) volunteer.setPoints(0);
+        int verificationReward = mission.getDuration() * 8; // Total reward will be 10 points/hour
+        volunteer.setPoints(volunteer.getPoints() + verificationReward);
 
         // =========================
         // 4. BADGE
         // =========================
-        int hours = volunteer.getTotalHours();
-
-        if (hours >= 30) {
-            volunteer.setBadge(Badge.GOLD);
-        } else if (hours >= 10) {
-            volunteer.setBadge(Badge.SILVER);
-        } else {
-            volunteer.setBadge(Badge.BRONZE);
-        }
+        updateBadge(volunteer);
 
         // =========================
         // SAVE USER
@@ -257,7 +221,7 @@ public class AssignmentService {
                         "Your mission has been verified by admin.\n\n" +
                         "Mission: " + mission.getTitle() + "\n" +
                         "Hours gained: " + mission.getDuration() + "\n" +
-                        "Points earned: " + newPoints + "\n" +
+                        "Points earned: " + verificationReward + "\n" +
                         "Total hours: " + volunteer.getTotalHours() + "\n" +
                         "Total points: " + volunteer.getPoints() + "\n" +
                         "Current badge: " + volunteer.getBadge() + "\n\n" +
@@ -270,7 +234,31 @@ public class AssignmentService {
         return assignmentRepository.findAll();
     }
 
+    @Transactional
+    public Assignment updateAssignmentStatus(Long assignmentId, String status) {
+        Assignment assignment = assignmentRepository.findById(assignmentId)
+                .orElseThrow(() -> new RuntimeException("Assignment not found"));
 
+        try {
+            AssignmentStatus newStatus = AssignmentStatus.valueOf(status.toUpperCase());
+            assignment.setStatus(newStatus);
+            return assignmentRepository.save(assignment);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Invalid status: " + status);
+        }
+    }
+
+
+    private void updateBadge(User volunteer) {
+        int hours = volunteer.getTotalHours() != null ? volunteer.getTotalHours() : 0;
+        if (hours >= 30) {
+            volunteer.setBadge(Badge.GOLD);
+        } else if (hours >= 10) {
+            volunteer.setBadge(Badge.SILVER);
+        } else {
+            volunteer.setBadge(Badge.BRONZE);
+        }
+    }
 }
 
 

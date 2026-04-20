@@ -60,7 +60,8 @@ public class User {
     private byte[] profileImage;
 
     @Enumerated(EnumType.STRING)
-    private Badge badge;
+    @Builder.Default
+    private Badge badge = Badge.BRONZE;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

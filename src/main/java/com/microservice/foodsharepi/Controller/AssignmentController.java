@@ -62,6 +62,26 @@ public class AssignmentController {
         return assignmentService.verifyAssignment(assignmentId);
     }
 
+    @PutMapping("/{assignmentId}/status")
+    public Assignment updateAssignmentStatus(
+            @PathVariable Long assignmentId,
+            @RequestBody StatusRequest statusRequest) {
+        return assignmentService.updateAssignmentStatus(assignmentId, statusRequest.getStatus());
+    }
+
+    // DTO pour la mise à jour du statut
+    public static class StatusRequest {
+        private String status;
+
+        public String getStatus() {
+            return status;
+        }
+
+        public void setStatus(String status) {
+            this.status = status;
+        }
+    }
+
     @GetMapping
     public List<Assignment> getAllAssignments() {
         return assignmentService.getAllAssignments();

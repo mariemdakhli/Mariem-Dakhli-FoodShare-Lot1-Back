@@ -14,6 +14,8 @@ public interface IAssignmentService {
     Mission getMissionById(Long missionId);
     Assignment markAsCompletedByVolunteer(Long assignmentId);
     Assignment verifyAssignment(Long assignmentId);
+    List<Assignment> getAssignmentsByUser(Long userId);
+    Assignment updateAssignmentStatus(Long assignmentId, String status);
 
 }
 
